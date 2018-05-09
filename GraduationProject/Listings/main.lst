@@ -1,0 +1,173 @@
+C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2018 20:01:12 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c COMPACT OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listi
+                    -ngs\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          //
+   2          
+   3          #include "reg52.h" 
+   4          #include "stdio.h"              //printf???  
+   5          #include "intrins.h"
+   6          #include "SRC/oled.h"
+   7          #include "ADC.h"
+   8          #include "DS18B20.h"
+   9          typedef unsigned int uint;
+  10          void delay(uint z);
+  11          void initTimer();
+  12          int G_Value[8];
+  13          int G_CurrentPort=0;
+  14          sbit m_Lit=P0^5;
+  15          
+  16          void initSer()  
+  17          {  
+  18   1          TMOD=0x20;    //???????,??????1,????2 ?????????8?????          
+  19   1          TH1=0xfd;     //???1??  ,??????9600 ??11.0529MHZ?  
+  20   1          TL1=0xfd;  
+  21   1          TR1=1;        //?????1  
+  22   1        
+  23   1          SM0=0;  
+  24   1          SM1=1;        //10?????,(8???)?????  
+  25   1          REN=1;        //????????  
+  26   1          EA=1;         //????(??)  
+  27   1          ES=1;         //??????  
+  28   1      }  
+  29          
+  30          
+  31          void SendInt(int i)
+  32          {
+  33   1      
+  34   1        int n;
+  35   1        char str[16];
+  36   1        
+  37   1        sprintf(str," %d",i);
+  38   1        
+  39   1        for(n=0;str[n]!=0;n++)
+  40   1        {
+  41   2          SBUF=str[n];  
+  42   2          while(!TI);  
+  43   2            TI=0;
+  44   2        }
+  45   1        SBUF='\n';
+  46   1        while(!TI);  
+  47   1            TI=0;
+  48   1        
+  49   1      }
+  50          void SendChar(char c)
+  51          {
+  52   1      
+  53   1      
+  54   1          SBUF=c;  
+C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2018 20:01:12 PAGE 2   
+
+  55   1          while(!TI);  
+  56   1            TI=0;
+  57   1      
+  58   1      
+  59   1      }
+  60          void main()  
+  61          {  
+  62   1        int tmp=0;
+  63   1        char str[6];
+  64   1        char port=0;
+  65   1        initSer();  
+  66   1         OLED_Display_On();
+  67   1        
+  68   1        delay(100);
+  69   1        OLED_Init();
+  70   1        OLED_Clear();
+  71   1        
+  72   1        OLED_ShowString(0,4,"Proj Bana 1.0");
+  73   1        
+  74   1        while(1)
+  75   1        {
+  76   2        
+  77   2          G_CurrentPort+=1;
+  78   2          G_CurrentPort%=3;
+  79   2          if(G_CurrentPort<2)
+  80   2          {
+  81   3            port=G_CurrentPort;
+  82   3            tmp=ReadADC(port);
+  83   3            if(tmp<1) tmp=1;
+  84   3            if(tmp>254) tmp =254;
+  85   3            G_Value[G_CurrentPort]=tmp;
+  86   3          }
+  87   2          if(G_CurrentPort==2)
+  88   2          {
+  89   3            tmp= ReadTemperature();
+  90   3            tmp=tmp/10;
+  91   3            
+  92   3            tmp=tmp+25;
+  93   3            tmp=tmp*2;
+  94   3            
+  95   3            tmp=255-tmp;
+  96   3            if(tmp<1) tmp=1;
+  97   3            if(tmp>254) tmp =254;
+  98   3          G_Value[2]=tmp;
+  99   3          
+ 100   3          //delay(1000);
+ 101   3          //sprintf(str,"%d",G_Value[2]);
+ 102   3          //OLED_ShowString(1,4,str);
+ 103   3          }
+ 104   2          delay(1000);
+ 105   2        }
+ 106   1      }  
+*** WARNING C280 IN LINE 63 OF main.c: 'str': unreferenced local variable
+ 107            
+ 108          void ser() interrupt 4  
+ 109          {  
+ 110   1          char a;
+ 111   1              if(RI)       //????,???RI?0  
+ 112   1          {        
+ 113   2              
+ 114   2              RI=0;  
+ 115   2              a=SBUF;
+C51 COMPILER V9.57.0.0   MAIN                                                              05/09/2018 20:01:12 PAGE 3   
+
+ 116   2              
+ 117   2            
+ 118   2            if(a>='0' && a<='9')
+ 119   2            {
+ 120   3              a-='0';
+ 121   3              SendInt(G_Value[a]);
+ 122   3                  
+ 123   3            }
+ 124   2            if(a=='L')
+ 125   2            {m_Lit=1;
+ 126   3            }
+ 127   2            if(a=='l')
+ 128   2            {m_Lit=0;
+ 129   3            }
+ 130   2          }  
+ 131   1        
+ 132   1          if(TI)     //????  
+ 133   1          {  
+ 134   2            TI=0;
+ 135   2          }      
+ 136   1      }  
+ 137          
+ 138          void delay(uint z)
+ 139          {
+ 140   1        uint x,y;
+ 141   1        for(x=z;x>0;x--)
+ 142   1          for(y=110;y>0;y--);
+ 143   1      }
+ 144          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    526    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =     18      26
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

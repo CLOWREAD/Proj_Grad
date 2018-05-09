@@ -1,0 +1,7 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj",
+".\Objects\ADC.obj",
+".\Objects\DS18B20.obj",
+".\Objects\oled.obj" 
+TO ".\Objects\GraduationProject" 
+PRINT(".\Listings\GraduationProject.m51") RAMSIZE(256) 
